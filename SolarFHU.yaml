@@ -140,11 +140,6 @@ actions:
       v_Eingabemax: !input Eingabemax
       v_Zielmin: !input Zielmin
       v_Zielmax: !input Zielmax
-  - action: notify.mobile_app_pixel_7a
-    metadata: {}
-    data:
-      message: "{{ ((states(v_solar_ertrag_heute)| float(1) ))   }}"
-
   - action: input_number.set_value
     data:
       value: >-
