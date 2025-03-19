@@ -110,7 +110,7 @@ blueprint:
           min: -10
           max: 10
           step: 0.5
-          unit_of_measurement: "erdal"
+          unit_of_measurement: "Punkte"
     Zielmax:
       name: Zielmax
       description: "Minimaler Zielwert. dieser Wert definiert das Maximum für die Bewertung des Ertrages"
@@ -120,7 +120,16 @@ blueprint:
           min: -10
           max: 10
           step: 0.5
-          unit_of_measurement: "erdal"
+          unit_of_measurement: "Punkte"
+    # Gewichtung:
+    #   name: Gewichtung
+    #   default: 4
+    #   selector:
+    #     number:
+    #       min: 0
+    #       max: 6
+    #       step: 0.5
+
 alias: Solar Ausblick Blueprint
 description: ""
 triggers:
@@ -140,6 +149,7 @@ actions:
       v_Eingabemax: !input Eingabemax
       v_Zielmin: !input Zielmin
       v_Zielmax: !input Zielmax
+  #    v_gewichtung: !input Gewichtung
   - action: input_number.set_value
     data:
       value: >-
@@ -161,17 +171,17 @@ actions:
         (v_Eingabemax-v_Eingabemin)+v_Zielmin ) | round(1) }}
     target:
       entity_id: !input solar_bewertung_ubermorgen
-
-  #     - action: input_number.set_value
-  #   target: input_number.solar_bewertung_ubermorgen
-  #   data:
-  #     value: >-
-  #       {{ ((states(v_solar_ertrag_ubermorgen) | float(2) - v_Eingabemin) * (v_Zielmax - v_Zielmin) /
-  #         (v_Eingabemax - v_Eingabemin) + v_Zielmin ) | round(1) }}
   # - action: input_number.set_value
-  #   target: input_number.solar_bewertung_morgen
   #   data:
   #     value: >-
-  #       {{ ((states(v_solar_ertrag_morgen)| float(2) - v_Eingabemin) * (v_Zielmax - v_Zielmin) /
-  #         (v_Eingabemax - v_Eingabemin) + v_Zielmin ) | round(1) }}
+  #       {% set solarertrag = ((states(v_solar_ertrag_ubermorgen) | float(2) - v_Eingabemin) * 4 *(v_Zielmax-v_Zielmin) /
+  #       (v_Eingabemax-v_Eingabemin)+v_Zielmin ) * v_gewichtung | round(1) %}
+  #       {{ [10, [-10, solarertrag] | max] | min | round(2) }}
+  #     #{% set solar_ertrag = states(v_solar_ertrag_ubermorgen) | float(0)  %}
+  #     #  {% set ergebnis = ( solar_ertrag -2 ) * v_gewichtung %}
+  #     #{{ [10, [-10, ergebnis] | max] | min | round(2) }}
+  #   target:
+  #     entity_id:
+  #       !input solar_bewertung_ubermorgen
+
 mode: single
