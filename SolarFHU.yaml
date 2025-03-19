@@ -1,0 +1,182 @@
+blueprint:
+  name: Solar Ausblick Blueprint
+  author: "EdgarM73"
+  description: "Berechnet die Solarerträge für heute, morgen und übermorgen und bewertet diese."
+  homeassistant:
+    min_version: "2024.6.0"
+  domain: automation
+  input:
+    solar_bewertung:
+      name: Solar Bewertung
+      description: >
+        `Solar Bewertung`
+
+        Hier wird die Bewertung des heutigen Tages abgespeichert. 
+
+        Erstelle einen passenden Helper [here](https://my.home-assistant.io/redirect/helpers/).
+      default:
+      selector:
+        entity:
+          filter:
+            - domain:
+                - input_number
+    solar_bewertung_morgen:
+      name: Solar Bewertung Morgen
+      description: >
+        `Solar Bewertung Morgen`
+
+        Hier wird die Bewertung für den Folgetag abgespeichert.
+        Erstelle einen passenden Helper [here](https://my.home-assistant.io/redirect/helpers/).
+      default:
+      selector:
+        entity:
+          filter:
+            - domain:
+                - input_number
+    solar_bewertung_ubermorgen:
+      name: Solar Bewertung Ubermorgen
+      description: >
+        `Solar Bewertung Ubermorgen`
+
+        Hier wird die Bewertung für den Folgetag abgespeichert.
+        Erstelle einen passenden Helper [here](https://my.home-assistant.io/redirect/helpers/).
+      default:
+      selector:
+        entity:
+          filter:
+            - domain:
+                - input_number
+
+    solar_ertrag_heute:
+      name: Solarertrag heute
+      description: "Solarertrag heute"
+      default:
+
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+              integration: open_meteo_solar_forecast
+          multiple: false
+
+    solar_ertrag_morgen:
+      name: Solarertrag morgen
+      description: "Solarertrag morgen"
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+              integration: open_meteo_solar_forecast
+          multiple: false
+    #              integration: energy
+    solar_ertrag_ubermorgen:
+      name: Solarertrag übermorgen
+      description: "Solarertrag übermorgen"
+      selector:
+        entity:
+          filter:
+            - domain:
+                - sensor
+              integration: open_meteo_solar_forecast
+          multiple: false
+    Eingabemin:
+      name: Eingabemin
+      description: "Minimaler Solarertrag"
+      default: 0
+      selector:
+        number:
+          min: 0
+          max: 0
+          mode: box
+          unit_of_measurement: "kWh"
+    Eingabemax:
+      name: Eingabemax
+      description: "Maximaler Solarertrag"
+      default: 4
+      selector:
+        number:
+          min: 0
+          max: 10
+          step: 0.5
+          unit_of_measurement: "kWh"
+    Zielmin:
+      name: Zielmin
+      description: "Minimaler Zielwert. dieser Wert definiert das Minimum für die Bewertung des Ertrages"
+      default: -10
+      selector:
+        number:
+          min: -10
+          max: 10
+          step: 0.5
+          unit_of_measurement: "erdal"
+    Zielmax:
+      name: Zielmax
+      description: "Minimaler Zielwert. dieser Wert definiert das Maximum für die Bewertung des Ertrages"
+      default: 10
+      selector:
+        number:
+          min: -10
+          max: 10
+          step: 0.5
+          unit_of_measurement: "erdal"
+alias: Solar Ausblick Blueprint
+description: ""
+triggers:
+  - trigger: time
+    at: "06:00:00"
+  - trigger: time
+    at: "07:00:00"
+  - trigger: time
+    at: "08:00:00"
+conditions: []
+actions:
+  - variables:
+      v_solar_ertrag_heute: !input solar_ertrag_heute
+      v_solar_ertrag_morgen: !input solar_ertrag_morgen
+      v_solar_ertrag_ubermorgen: !input solar_ertrag_ubermorgen
+      v_Eingabemin: !input Eingabemin
+      v_Eingabemax: !input Eingabemax
+      v_Zielmin: !input Zielmin
+      v_Zielmax: !input Zielmax
+  - action: notify.mobile_app_pixel_7a
+    metadata: {}
+    data:
+      message: "{{ ((states(v_solar_ertrag_heute)| float(1) ))   }}"
+
+  - action: input_number.set_value
+    data:
+      value: >-
+        {{ ((states(v_solar_ertrag_heute) | float(2) - v_Eingabemin) * (v_Zielmax-v_Zielmin) /
+        (v_Eingabemax-v_Eingabemin)+v_Zielmin ) | round(1) }}
+    target:
+      entity_id: !input solar_bewertung
+  - action: input_number.set_value
+    data:
+      value: >-
+        {{ ((states(v_solar_ertrag_morgen) | float(2) - v_Eingabemin) * (v_Zielmax-v_Zielmin) /
+        (v_Eingabemax-v_Eingabemin)+v_Zielmin ) | round(1) }}
+    target:
+      entity_id: !input solar_bewertung_morgen
+  - action: input_number.set_value
+    data:
+      value: >-
+        {{ ((states(v_solar_ertrag_ubermorgen) | float(2) - v_Eingabemin) * (v_Zielmax-v_Zielmin) /
+        (v_Eingabemax-v_Eingabemin)+v_Zielmin ) | round(1) }}
+    target:
+      entity_id: !input solar_bewertung_ubermorgen
+
+  #     - action: input_number.set_value
+  #   target: input_number.solar_bewertung_ubermorgen
+  #   data:
+  #     value: >-
+  #       {{ ((states(v_solar_ertrag_ubermorgen) | float(2) - v_Eingabemin) * (v_Zielmax - v_Zielmin) /
+  #         (v_Eingabemax - v_Eingabemin) + v_Zielmin ) | round(1) }}
+  # - action: input_number.set_value
+  #   target: input_number.solar_bewertung_morgen
+  #   data:
+  #     value: >-
+  #       {{ ((states(v_solar_ertrag_morgen)| float(2) - v_Eingabemin) * (v_Zielmax - v_Zielmin) /
+  #         (v_Eingabemax - v_Eingabemin) + v_Zielmin ) | round(1) }}
+mode: single
